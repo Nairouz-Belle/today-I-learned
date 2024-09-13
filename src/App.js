@@ -86,7 +86,19 @@ function FactList(){
     <ul className="facts-list">
       {
         facts.map((fact) => (
-          <li key={fact.id} className="fact">
+          //Passing the fact element (PROPS)
+          <Fact key={fact.id} fact={fact} />
+        ))
+      }
+    </ul>
+    <p>There are {facts.length} facts in the database. Add your own!</p>
+  </section>);
+}
+
+function Fact({fact}){
+  //Let's do that while we receive the props in the function parameter//const {fact} = props; // === cnost fact = props.fact;
+
+  return <li  className="fact">
               <p>
                 {fact.text}
                 <a className="source" href={fact.source}>(Source)</a>
@@ -97,11 +109,7 @@ function FactList(){
                 <button>🤯 {fact.votesMindblowing}</button>
                 <button>⛔️ {fact.votesFalse}</button>
               </div>
-            </li>
-        ))
-      }
-    </ul>
-  </section>);
+          </li>
 }
 
 export default App;
