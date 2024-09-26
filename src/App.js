@@ -48,18 +48,18 @@ const initialFacts = [
 
 function App() {
   const [showForm, setShowForm] = useState(false);
-  
+  const [facts,setFacts] = useState(initialFacts);
 
   return (
     <>
       {/* HEADER */}
       <Header showForm={showForm} setShowForm={setShowForm} />
       {/* Use state variable */}
-      {showForm ? <NewFactForm/> : null}
+      {showForm ? <NewFactForm setFacts={setFacts} setShowForm = {setShowForm} /> : null}
 
       <main className='main'>
         <CategoryFilter/>
-        <FactList/>
+        <FactList facts={facts} />
       </main>
     </>
   );
@@ -73,7 +73,8 @@ function Header({showForm, setShowForm}){
             <h1>{appTitle}</h1>
           </div>
           <button 
-          className="btn btn-large btn-open" onClick={()=>setShowForm((show)=> !show)}>{showForm ? "Close" : "Share a Fact"}</button>   
+          className="btn btn-large btn-open"
+          onClick={()=>setShowForm((show)=> !show)}>{showForm ? "Close" : "Share a Fact"}</button>   
         </header>
 }
 
@@ -88,15 +89,68 @@ const CATEGORIES = [
   { name: "news", color: "#8b5cf6" },
 ];
 
-function NewFactForm(){
-  return <form className="fact-form">
-    <input type="text" placeholder="Share a fact with world..."/>
-        <span>300</span>
-        <input type="text" placeholder="Trustworthy source..." />
-        <select name="" id="">
+function isValidHttpUrl(string){
+  let url;
+  try{
+    url = new URL(string);
+  }catch(_){
+    return false;
+  }
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
+function NewFactForm({setFacts, setShowForm}){
+  const [text, setText] = useState("");
+  const [source, setSource] = useState("http://example.com");
+  const [category,setCategory] = useState("");
+  const textLength = text.length;
+
+  function handleSubmit(e){
+    // 1. Prevent browser reload
+    e.preventDefault();
+    console.log(text, source,category);
+
+    //2. Check if the data is valid. If so create new fact
+    if(text && isValidHttpUrl(source) && category && textLength <= 200) {
+      //3. Create a new fact
+      const newFact = {
+        id: Math.round(Math.random * 100000000),
+        text: text,
+        source,
+        category,
+        votesInteresting: 0,
+        votesMindblowing:0,
+        votesFalse: 0,
+        createdIn: new Date().getFullYear(),
+      };
+     //4. Add the fact to the UI: add the fact to state 
+     setFacts((facts) => [newFact,...facts]);
+     //5. Reset input fields
+     setText('');
+     setSource('');
+     setCategory('');
+     //6. Close the form
+     setShowForm(false);
+    }
+    
+    
+  }
+
+  return <form className="fact-form" onSubmit={handleSubmit}>
+    <input type="text" 
+      placeholder="Share a fact with world..."
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+    />
+        <span>{200-textLength}</span>
+        <input type="text" placeholder="Trustworthy source..."
+        value={source}
+        onChange={(e)=> setSource(e.target.value)}
+        />
+        <select value={category} onChange={(e)=>setCategory(e.target.value)}>
           <option value="">Choose Category</option>
           {
-            CATEGORIES.map((cat)=> (<option value={cat.name}>{cat.name.toUpperCase()}</option>))
+            CATEGORIES.map((cat)=> (<option key={cat.name} value={cat.name}>{cat.name.toUpperCase()}</option>))
           }
         </select>
         <button className="btn btn-large">Post</button>
@@ -124,9 +178,9 @@ function CategoryFilter(){
   );
 }
 
-function FactList(){
+function FactList({facts}){
   //temporary (while we're using the up fake data.)
-  const facts = initialFacts;
+  
 
   return (<section>
     <ul className="facts-list">
