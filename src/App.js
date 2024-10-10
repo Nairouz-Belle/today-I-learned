@@ -50,12 +50,15 @@ function App() {
   const [showForm, setShowForm] = useState(false);
   const [facts,setFacts] = useState([]);
   const [isLoading,setIsLoading] = useState(false);
+  
 
   useEffect(function () {
 
     async function getFact(){
       setIsLoading(true);
-      let{data: facts,error} = await supabase.from("facts").select("*").order("voteinteresting",{  ascending: false  });
+      let{data: facts,error} = await supabase.from("facts")
+      .select("*")
+      .order("voteinteresting",{  ascending: false  });
       console.log(error);
       if(!error)
        setFacts(facts);
