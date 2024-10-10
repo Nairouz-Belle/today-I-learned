@@ -84,7 +84,7 @@ function App() {
 
       <main className='main'>
         <CategoryFilter setCurrentCategory = {setCurrentCategory} />
-        {isLoading ? <Loader/> : <FactList facts={facts} />}
+        {isLoading ? <Loader/> : <FactList facts={facts} setFacts = {setFacts} />}
         
       </main>
     </>
@@ -156,11 +156,10 @@ function NewFactForm({setFacts, setShowForm}){
       setIsUploading(true);
        const { data: newFact,error } = await supabase.from("facts").insert([{text,source,category}]).select();
        setIsUploading(false);
-       console.log(error);
-       console.log(newFact);
-
+       
      //4. Add the fact to the UI: add the fact to state 
-     setFacts((facts) => [newFact[0],...facts]);
+     if(!error)
+       setFacts((facts) => [newFact[0],...facts]);
      //5. Reset input fields
      setText('');
      setSource('');
@@ -220,7 +219,7 @@ function CategoryFilter({setCurrentCategory}){ // props "setCurrentCategory" is 
   );
 }
 
-function FactList({facts}){
+function FactList({facts, setFacts }){
   if(facts.length === 0)
     return <p className='message'>No facts for this category yet! Create the first one ✌</p>
 
@@ -229,7 +228,7 @@ function FactList({facts}){
       {
         facts.map((fact) => (
           //Passing the fact element (PROPS)
-          <Fact key={fact.id} fact={fact} />
+          <Fact key={fact.id} fact={fact} setFacts={setFacts} />
         ))
       }
     </ul>
@@ -237,8 +236,14 @@ function FactList({facts}){
   </section>);
 }
 
-function Fact({fact}){
-  //Let's do that while we receive the props in the function parameter//const {fact} = props; // === cnost fact = props.fact;
+function Fact({fact, setFacts }){
+  
+  async function handleVote(columnName){
+    const {data: updatedFact,error} = await supabase.from('facts').update({[columnName]: fact[columnName] + 1}).eq("id", fact.id).select();
+    
+    if(!error) setFacts((facts) => facts.map((f) => f.id === fact.id? updatedFact[0] : f))
+  }
+  
   return <li  className="fact">
               <p>
                 {fact.text}
@@ -246,9 +251,9 @@ function Fact({fact}){
               </p> 
               <span className="tag" style={{backgroundColor:CATEGORIES.find((cat)=> cat.name === fact.category).color}}>{fact.category}</span>
               <div className="vote-buttons">
-                <button>👍 {fact.voteinteresting}</button>
-                <button>🤯 {fact.votemindblowing}</button>
-                <button>⛔️ {fact.votefalse}</button>
+                <button onClick={()=>{handleVote("voteinteresting")}}>👍 {fact.voteinteresting}</button>
+                <button onClick={()=>{handleVote("votemindblowing")}}>🤯 {fact.votemindblowing}</button>
+                <button onClick={()=>{handleVote("votefalse")}}>⛔️ {fact.votefalse}</button>
               </div>
           </li>
 }
